@@ -1,0 +1,5 @@
+C:\Users\harry\source\repos\MoodMe NETDemo\obj\Debug\MoodMe NETDemo.csproj.AssemblyReference.cache
+C:\Users\harry\source\repos\MoodMe NETDemo\obj\Debug\MoodMe_NETDemo.Form1.resources
+C:\Users\harry\source\repos\MoodMe NETDemo\obj\Debug\MoodMe_NETDemo.Properties.Resources.resources
+C:\Users\harry\source\repos\MoodMe NETDemo\obj\Debug\MoodMe NETDemo.csproj.GenerateResource.cache
+C:\Users\harry\source\repos\MoodMe NETDemo\obj\Debug\MoodMe NETDemo.csproj.CoreCompileInputs.cache
