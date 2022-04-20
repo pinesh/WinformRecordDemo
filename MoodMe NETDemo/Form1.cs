@@ -10,20 +10,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ScreenRecorderLib;
 
 namespace MoodMe_NETDemo
 {
     public partial class Form1 : Form
     {
         private RecordingViewModel vm;
+
         public Form1()
         {
             InitializeComponent();
             vm = new RecordingViewModel();
             //vm.RecordingBindingSource = 
-           // this.Load +=
-           //store paths of video
+            // this.Load +=
+            //store paths of video
         }
+
         /*
         <Grid Background = "White" HorizontalAlignment="Right" VerticalAlignment="Top"  >
         <!-- overlay with hint text -->
@@ -32,6 +35,11 @@ namespace MoodMe_NETDemo
         <!-- enter term here -->
         <TextBox MinWidth = "50" Name="txtSearchBox" Background="Transparent" />
         </Grid>
+
+        class ideas, 
+        Files should be saved to an appdata folder, the database will then store their paths for retrieval.
+        full mvvm
+
         */
         /// <summary>
         /// Verify integrity of database.
@@ -40,123 +48,161 @@ namespace MoodMe_NETDemo
         /// <param name="e"></param>
         private void Form1_Load(object sender, EventArgs e)
         {
-
-        }
-
-     
-    }
-
-    public class RecordingDataBase
-    {
-        private string connectionString;
-        private string dbname = "demo.db";
-        
-
-
-
-        public RecordingDataBase()
-        {
-            EstablishDB();
+            RecordingDataBase d = new RecordingDataBase();
+            dataGridView1.DataSource = d.ds.Tables[0];
         }
 
 
-        internal void Construct()
+        /// <summary>
+        /// Submit a new/updated Row INSERT/UPDATE
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button3_Click(object sender, EventArgs e)
         {
-            using (SQLiteConnection conn = new SQLiteConnection(connectionString))
+
+        }
+
+        private void TagTextBox_TextChanged(object sender, EventArgs e)
+        {
+            if (TagTextBox.Text.Length > 0)
             {
-                using (SQLiteCommand comm = new SQLiteCommand())
-                {
-                        comm.Connection = conn;
-                        comm.CommandText = " create table test (n integer) ";
-                        comm.ExecuteNonQuery();
-                }
-                conn.Close();
+                textBox1.Visible = false;
+                button1.Enabled = true;
+
+            }
+            else
+            {
+                textBox1.Visible = true;
+                button1.Enabled = false;
             }
         }
 
-        
-        internal void Transact(string video,string tag)
+        public class RecordingDataBase
         {
-            using (SQLiteConnection conn = new SQLiteConnection(connectionString))
-            {
-                using (SQLiteTransaction tran = conn.BeginTransaction())
-                {
-                    using (SQLiteCommand comm = new SQLiteCommand())
-                    {
-                        comm.Connection = conn;
-                        comm.CommandText = "INSERT INTO recordings(id,video,tag, creationDate) VALUES($id,$video,$tag)";
-                        comm.Parameters.AddWithValue("$id", DateTime.UtcNow.ToFileTime());
-                        comm.Parameters.AddWithValue("$video", video);
-                        comm.Parameters.AddWithValue("$tag", tag);
-                        comm.Prepare();
-                        comm.ExecuteNonQuery();
-                    }
-                    tran.Commit();
-                }
-                conn.Close();
-            }
-        }
+            private string connectionString;
+            private string dbname = "demo.db";
+            public DataSet ds;
 
-        internal void EstablishDB()
-        {
-            var dir = Application.ExecutablePath;
-            try
+            public RecordingDataBase()
             {
-                if (!Directory.Exists(dir))
+                EstablishDB();
+                PopulateDB();
+            }
+
+            internal void PopulateDB()
+            {
+                using (SQLiteConnection conn = new SQLiteConnection(connectionString))
                 {
-                    Directory.CreateDirectory(dir);
+                    SQLiteDataAdapter dap = new SQLiteDataAdapter("SELECT * FROM recordings", connectionString);
+                    ds = new DataSet();
+                    dap.Fill(ds);
+                    conn.Close();
                 }
-                var dbPath = Path.Combine(dir,dbname);
-                connectionString = "Data Source=" + dbPath;
-                if (!File.Exists(dbPath))
+            }
+
+            internal void Transact(string video, string tag, int id)
+            {
+                try
                 {
-                    SQLiteConnection.CreateFile(dbPath);
                     using (SQLiteConnection conn = new SQLiteConnection(connectionString))
                     {
-                        using (SQLiteCommand comm = new SQLiteCommand())
+                        using (SQLiteTransaction tran = conn.BeginTransaction())
                         {
-                            comm.Connection = conn;
-                            comm.CommandText = @"CREATE TABLE recordings(id INTEGER PRIMARY KEY,video TEXT, tag TEXT)";
-                            comm.ExecuteNonQuery();
+                            using (SQLiteCommand comm = new SQLiteCommand())
+                            {
+                                comm.Connection = conn;
+                                comm.CommandText =
+                                    "INSERT INTO recordings(id,video,tag, creationDate) VALUES($id,$video,$tag)";
+                                //comm.Parameters.AddWithValue("$id", DateTime.UtcNow.ToFileTime());
+                                comm.Parameters.AddWithValue("$id", id);
+                                comm.Parameters.AddWithValue("$video", video);
+                                comm.Parameters.AddWithValue("$tag", tag);
+                                comm.Prepare();
+                                comm.ExecuteNonQuery();
+                            }
+
+                            tran.Commit();
                         }
+
                         conn.Close();
                     }
                 }
-              
+                catch (System.Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }
-            catch (System.Exception ex)
+
+            internal void EstablishDB()
             {
-                //MessageBox.Show(x.Message);
+                var dir = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "Recordings");
+                try
+                {
+                    if (!Directory.Exists(dir))
+                    {
+                        Directory.CreateDirectory(dir);
+                    }
+
+                    var dbPath = Path.Combine(dir, dbname);
+                    connectionString = "Data Source=" + dbPath;
+                    if (!File.Exists(dbPath))
+                    {
+                        SQLiteConnection.CreateFile(dbPath);
+
+                        using (SQLiteConnection conn = new SQLiteConnection(connectionString))
+                        {
+                            conn.Open();
+                            using (SQLiteCommand comm = new SQLiteCommand())
+                            {
+                                comm.Connection = conn;
+                                comm.CommandText =
+                                    @"CREATE TABLE recordings(id INTEGER PRIMARY KEY,video TEXT, tag TEXT)";
+                                comm.ExecuteNonQuery();
+                            }
+
+                            conn.Close();
+                        }
+                    }
+
+                }
+                catch (System.Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+
+        public class RecordingViewModel : IDisposable
+        {
+            private string db;
+
+
+            public RecordingViewModel() => db = "hehe";
+            public BindingSource RecordingBindingSource { get; set; }
+
+            public void Load()
+            {
+                //set recording binding source here
+
+            }
+
+            public void Remove() => RecordingBindingSource.RemoveCurrent();
+            public void New() => RecordingBindingSource.AddNew();
+
+            public void Save()
+            {
+                RecordingBindingSource.EndEdit();
+
+                //save db changes and push them back
+            }
+
+            public void Dispose()
+            {
+                //dispose of db entity
             }
         }
     }
 
-    public class RecordingViewModel : IDisposable
-    {
-        private string db;
-
-
-        public RecordingViewModel() => db = "hehe";
-        public BindingSource RecordingBindingSource { get; set; }
-
-        public void Load()
-        {
-            //set recording binding source here
-
-        }
-
-        public void Remove() => RecordingBindingSource.RemoveCurrent();
-        public void New() => RecordingBindingSource.AddNew();
-
-        public void Save()
-        {
-            RecordingBindingSource.EndEdit();
-           
-            //save db changes and push them back
-        }
-        public void Dispose()
-        {
-            //dispose of db entity
-        }
-    }
 }
+
