@@ -30,6 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form2));
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.BTNCancel = new System.Windows.Forms.Button();
             this.axWindowsMediaPlayer1 = new AxWMPLib.AxWindowsMediaPlayer();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.LBLSelectedRecording = new System.Windows.Forms.Label();
@@ -37,7 +38,6 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.TagTextBox = new System.Windows.Forms.TextBox();
-            this.BTNCancel = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.axWindowsMediaPlayer1)).BeginInit();
             this.SuspendLayout();
@@ -58,6 +58,16 @@
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Edit Recording";
+            // 
+            // BTNCancel
+            // 
+            this.BTNCancel.Location = new System.Drawing.Point(289, 393);
+            this.BTNCancel.Margin = new System.Windows.Forms.Padding(2);
+            this.BTNCancel.Name = "BTNCancel";
+            this.BTNCancel.Size = new System.Drawing.Size(56, 28);
+            this.BTNCancel.TabIndex = 26;
+            this.BTNCancel.Text = "Cancel";
+            this.BTNCancel.UseVisualStyleBackColor = true;
             // 
             // axWindowsMediaPlayer1
             // 
@@ -126,16 +136,6 @@
             this.TagTextBox.Name = "TagTextBox";
             this.TagTextBox.Size = new System.Drawing.Size(125, 20);
             this.TagTextBox.TabIndex = 18;
-            // 
-            // BTNCancel
-            // 
-            this.BTNCancel.Location = new System.Drawing.Point(289, 393);
-            this.BTNCancel.Margin = new System.Windows.Forms.Padding(2);
-            this.BTNCancel.Name = "BTNCancel";
-            this.BTNCancel.Size = new System.Drawing.Size(56, 28);
-            this.BTNCancel.TabIndex = 26;
-            this.BTNCancel.Text = "Cancel";
-            this.BTNCancel.UseVisualStyleBackColor = true;
             // 
             // Form2
             // 

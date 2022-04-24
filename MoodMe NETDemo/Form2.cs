@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 
 namespace MoodMe_NETDemo
 {
@@ -33,12 +25,14 @@ namespace MoodMe_NETDemo
 
             //Event Binding
             BTNSubmitRecording.Click += (s, e) => _m.Submit(Closing);
-            BTNCancel.Click += (s, e) => _m.ClearCancel(Closing);
+            BTNCancel.Click += (s, e) => Close(); 
             TagTextBox.TextChanged += (s, e) => _m.TagTextChanged(s, e);
+            FormClosing += (s, e) => _m.ClearCancel(e);
         }
-        private void Closing()
+        private new void Closing()
         {
-            this.Close();
+            Close();
         }
+
     }
 }

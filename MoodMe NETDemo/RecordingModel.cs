@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -16,24 +15,25 @@ namespace MoodMe_NETDemo
         private string _tag = "";
         private string _initialTag;
         private DataTable _recordings;
-
-       
         private readonly RecordingDbManager _recordingDb;
 
         private bool _tagEnabled;
         private bool _submitState;
         private bool _tagEmpty;
+        public string RecordingPath;
 
         /// <summary>
         /// Constructor
         /// </summary>
         public RecordingModel()
         {
+
             _recordingDb = new RecordingDbManager("demo.db");
             Recordings = _recordingDb.Ds.Tables[0];
+            RecordingPath = _recordingDb.RecordingFolder;
         }
 
-
+    
 
         public DataTable Recordings
         {
@@ -41,10 +41,7 @@ namespace MoodMe_NETDemo
             set
             {
                 _recordings = value;
-                if (PropertyChanged != null)
-                {
-                    PropertyChanged(this, new PropertyChangedEventArgs("Recordings"));
-                }
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Recordings"));
             }
         }
 
@@ -99,7 +96,7 @@ namespace MoodMe_NETDemo
             set
             {
                 _submitState = value;
-                if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs("SubmitState"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("SubmitState"));
             }
         }
 
@@ -112,7 +109,7 @@ namespace MoodMe_NETDemo
             set
             {
                 _tagEnabled = value;
-                if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs("TagFieldEnabled"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("TagFieldEnabled"));
             }
         }
 
@@ -127,7 +124,7 @@ namespace MoodMe_NETDemo
                 _tagEmpty = value;
                 if (_tagEmpty)
                     SubmitState = false;
-                if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs("TagFieldEmpty"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("TagFieldEmpty"));
             }
         }
 
@@ -168,58 +165,41 @@ namespace MoodMe_NETDemo
                 FileInfo f = new FileInfo(filePath);
                 if(f.Exists)
                     f.Delete();
-                this._recordingDb.Remove(id);
+                _recordingDb.Remove(id);
                 Recordings = _recordingDb.Ds.Tables[0];
-
             }
             catch (Exception e)
             {
                 PromptError(e.Message);
-                return;
             }
         }
 
-
-        public void Switch()
-        {
-           
-        }
-
-
         /// <summary>
-        /// GridClick the current recording context to a previous entry in the database.
+        /// GridClick the current recording context to a previous entry in the database or otherwise flags delete.
         /// </summary>
         /// <param name="e"> Cell info</param>
         public void GridClick(object sender ,DataGridViewCellEventArgs e)
         {
+            if (e.RowIndex > Recordings.Rows.Count - 1 || e.RowIndex < 0) return;
             var temp = (DataGridView)sender;
             if (e.ColumnIndex == temp.Columns["del_col"].Index)
             {
-                const string message = "Are you sure you want to delete?";
-                const string title = "Delete Recording";
-                const MessageBoxButtons buttons = MessageBoxButtons.YesNo;
-                var result = MessageBox.Show(message, title, buttons);
+                var result = MessageBox.Show(@"Are you sure you want to delete?", @"Delete Recording", MessageBoxButtons.YesNo);
                 if (result != DialogResult.Yes) return;
                 DeleteEntry((long)Recordings.Rows[e.RowIndex].ItemArray[0], (string)Recordings.Rows[e.RowIndex].ItemArray[1]);
                 return;
             }
 
-
-            if (e.RowIndex > Recordings.Rows.Count - 1 || e.RowIndex < 0) return;
-
             if (!Found(true) && _currentRecording != "")
             {
-                const string message = "You have an unsaved changes, do you want to discard?";
-                const string title = "Discard Previous Recording";
-                const MessageBoxButtons buttons = MessageBoxButtons.YesNo;
-                var result = MessageBox.Show(message, title, buttons);
+                var result = MessageBox.Show(@"You have an unsaved changes, do you want to discard?", @"Discard Previous Recording", MessageBoxButtons.YesNo);
                 if (result != DialogResult.Yes) return;
             }
 
             var r = Recordings.Rows[e.RowIndex];
             _initialTag = (string)r.ItemArray[2];
             LocalId = (long)r.ItemArray[0];
-            CurrentRecording = (string)r.ItemArray[1];
+            CurrentRecording = Path.Combine(RecordingPath,(string)r.ItemArray[1]);
             TagText = (string)r.ItemArray[2];
         }
 
@@ -271,13 +251,10 @@ namespace MoodMe_NETDemo
                 return;
             }
 
-            const string message = "Are you sure you want to upload?";
-            const string title = "Confirm Submit";
-            const MessageBoxButtons buttons = MessageBoxButtons.YesNo;
-            var result = MessageBox.Show(message, title, buttons);
+            var result = MessageBox.Show(@"Are you sure you want to upload?", @"Confirm Submit", MessageBoxButtons.YesNo);
             if (result != DialogResult.Yes) return;
 
-            _recordingDb.Transact(CurrentRecording, TagText, LocalId.Value);
+            _recordingDb.Transact(Path.GetFileName(CurrentRecording), TagText, LocalId.Value);
             //PropertyChanged(this, new PropertyChangedEventArgs("RecordingDB"));
              Recordings = _recordingDb.Ds.Tables[0];
             //Reset Locals
@@ -288,29 +265,24 @@ namespace MoodMe_NETDemo
             c();
         }
 
-        public void ClearCancel(Close c)
+        public void ClearCancel(FormClosingEventArgs e)
         {
-            if (!Found(true) && _currentRecording != "")
+            if (Found(true) || _currentRecording == "") return;
+            var result = MessageBox.Show(@"You have an unsaved changes, do you want to discard?", @"Discard Previous Recording", MessageBoxButtons.YesNo);
+            if (result == DialogResult.No)
             {
-                const string message = "You have an unsaved changes, do you want to discard?";
-                const string title = "Discard Previous Recording";
-                const MessageBoxButtons buttons = MessageBoxButtons.YesNo;
-                var result = MessageBox.Show(message, title, buttons);
-                if (result != DialogResult.Yes) return;
+                e.Cancel = true;
+                return;
             }
-
-            if (!Found(false))
-            {
-                var f = new FileInfo(CurrentRecording);
-                if(f.Exists)
-                    f.Delete();
-            }
-
+            Cursor.Current = Cursors.WaitCursor;
+            var f = new FileInfo(CurrentRecording);
+            if (f.Exists) 
+                f.Delete();
             LocalId = null;
             _initialTag = "";
             TagText = "";
             CurrentRecording = "";
-            c();
+            Cursor.Current = Cursors.Default;
         }
     }
     }

@@ -7,7 +7,6 @@ C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\bin\x64\Debug\S
 C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\bin\x64\Debug\ScreenRecorderLib.xml
 C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\MoodMe NETDemo.csproj.AssemblyReference.cache
 C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\MoodMe NETDemo.csproj.SuggestedBindingRedirects.cache
-C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\MoodMe_NETDemo.Form1.resources
 C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\MoodMe_NETDemo.Properties.Resources.resources
 C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\MoodMe NETDemo.csproj.GenerateResource.cache
 C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\MoodMe NETDemo.csproj.CoreCompileInputs.cache
@@ -21,3 +20,4 @@ C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\I
 C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\AxInterop.WMPLib.dll
 C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\MoodMe NETDemo.csproj.ResolveComReference.cache
 C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\MoodMe_NETDemo.Form2.resources
+C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\MoodMe_NETDemo.BaseForm.resources

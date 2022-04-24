@@ -1,75 +1,71 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-
-using ScreenRecorderLib;
 
 namespace MoodMe_NETDemo
 {
-    public partial class Form1 : Form
+    public partial class BaseForm : Form
     {
- 
         private RecordingModel _m;
-
-        public Form1()
+        public BaseForm()
         {
             InitializeComponent();
-            _m = new RecordingModel();
-            //Data Binding
-            //DB Display
-            dataGridView1.DataBindings.Add(new Binding("DataSource", this._m, "Recordings"));
-            dataGridView1.CellClick += (s, e) =>  _m.GridClick(s,e);
-           
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            DataGridViewButtonColumn removeButtonColumn = new DataGridViewButtonColumn();
+            try
             {
-                removeButtonColumn.Name = "del_col";
-                removeButtonColumn.HeaderText = "Delete";
-                removeButtonColumn.Text = "Delete";
-                removeButtonColumn.UseColumnTextForButtonValue = true;
-            
+                _m = new RecordingModel();
 
-                this.dataGridView1.Columns.Add(removeButtonColumn);
+                //Data Binding
+                dataGridView1.DataBindings.Add(new Binding("DataSource", _m, "Recordings"));
+                dataGridView1.CellClick += (s, ef) => _m.GridClick(s, ef);
+                var removeButtonColumn = new DataGridViewButtonColumn();
+                {
+                    removeButtonColumn.Name = "del_col";
+                    removeButtonColumn.HeaderText = "Delete";
+                    removeButtonColumn.Text = "Delete";
+                    removeButtonColumn.UseColumnTextForButtonValue = true;
+                    dataGridView1.Columns.Add(removeButtonColumn);
+                }
+                dataGridView1.MultiSelect = false;
+                dataGridView1.Columns[0].Visible = false;
+
+                for (var i = 0; i < dataGridView1.Columns.Count; i++)
+                {
+                    dataGridView1.Columns[i].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+                }
             }
-            this.dataGridView1.Columns[0].Visible = false;
+            catch (Exception)
+            {
+                Close();
+            }
         }
 
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             if (dataGridView1 == null || e.ColumnIndex == dataGridView1.Columns["del_col"].Index) return;
-            using (var PreviewForm = new Form2(ref _m))
+            using (var previewForm = new Form2(ref _m))
             {
-                // this.WindowState = FormWindowState.Minimized;
-                PreviewForm.ShowDialog();
-                // dataGridView1.DataSource = null;
+                previewForm.ShowDialog();
             }
         }
 
         private void BTNNewRecording_Click_1(object sender, EventArgs e)
         {
-            using (var recordingForm = new RecordingScreen())
+            using (var recordingForm = new RecordingScreen(_m.RecordingPath))
             {
-                this.WindowState = FormWindowState.Minimized;
+                WindowState = FormWindowState.Minimized;
                 recordingForm.ShowDialog();
-
-                //This bit is somewhat of a poor coding practice. Full software would map these to bindings in model.
-                this._m.TagText = "";
-                this._m.CurrentRecording = recordingForm.SavePath;
-                this._m.LocalId = recordingForm.StartTime;
-                this.WindowState = FormWindowState.Normal;
-                using (var PreviewForm = new Form2(ref _m))
+                _m.TagText = "";
+                WindowState = FormWindowState.Normal;
+                if (recordingForm.SavePath == null) return;
+                _m.CurrentRecording = recordingForm.SavePath;
+                _m.LocalId = recordingForm.StartTime;
+               
+                using (var previewForm = new Form2(ref _m))
                 {
-                    // this.WindowState = FormWindowState.Minimized;
-                    PreviewForm.ShowDialog();
-                    // dataGridView1.DataSource = null;
+                    previewForm.ShowDialog();
                 }
             }
         }
