@@ -2,13 +2,13 @@
 Contains the MoodMe interview assesment progress for the .Net test.
 Represents all requested features with a minor change to the actual recording window. Instead opting for a dedicated start stop overlay with an edit recording page standing in for the rest.
 
-**To Use: 
+**To Use:**
 
-*Download the release, extract and run the executable, no other deployment needed.
+_Download the release, extract and run the executable, no other deployment needed._
 
-**Questionare
+**Questionare**
 
-*Please rate your proficiency in the following on a scale of 1-10:
+_Please rate your proficiency in the following on a scale of 1-10:_
 
 C# - 8
 
