@@ -9,52 +9,104 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ScreenRecorderLib;
-
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Timers;
 namespace MoodMe_NETDemo
 {
     public partial class RecordingScreen : Form
     {
-        RecordingHandler x = new RecordingHandler();
+        RecordingHandler _x = new RecordingHandler();
 
+        public string SavePath { get; private set; }
+        public long StartTime { get; private set; }
+
+        private static readonly IntPtr HwndTopmost = new IntPtr(-1);
+        private const UInt32 SwpNosize = 0x0001;
+        private const UInt32 SwpNomove = 0x0002;
+        private const UInt32 TopmostFlags = SwpNomove | SwpNosize;
+        private DateTime _sTime;
+
+        private System.Timers.Timer _timer = new System.Timers.Timer(1000);
         public RecordingScreen()
         {
             InitializeComponent();
-            x.CompleteStatus += ShowRecordingSuccess;
-            x.ErrorStatus += ShowRecordingError;
+            _x.CompleteStatus += OnRecordingSuccess;
+            _x.ErrorStatus += OnRecordingError;
         }
 
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
         private void RecordingScreen_Load(object sender, EventArgs e)
         {
-
+            SetWindowPos(this.Handle, HwndTopmost, 0, 0, 0, 0, TopmostFlags);
+            StartTime = DateTime.UtcNow.ToFileTime();
+            LBLTimer.Text = "00:00:00";
+            _sTime = DateTime.Now;
+            _timer.Elapsed += (o, s) => Task.Factory.StartNew(() => OnTimerElapsed(o, s));
+            _timer.Start();
+            _x.StartRecording(Path.GetTempPath());
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            this.WindowState = FormWindowState.Minimized;
-            button1.Enabled = false;
-            button2.Enabled = true;
-            x.StartRecording(Path.GetTempPath());
-        }
-
-        private void ShowRecordingError(object sender, EventArgs e)
+        private void OnRecordingError(object sender, EventArgs e)
         {
             var s = ((RecordingFailedEventArgs) e).Error;
             MessageBox.Show(s);
+            _timer.Stop();
             this.Close();
         }
 
-        private void ShowRecordingSuccess(object sender, EventArgs e)
+        private void OnRecordingSuccess(object sender, EventArgs e)
         {
-            var s =((RecordingCompleteEventArgs) e).FilePath;
+            SavePath = ((RecordingCompleteEventArgs) e).FilePath;
+            if (SavePath.Length == 0)
+                throw new Exception("Error Recording Path Failed");
+         
+         
         }
 
 
+        /// <summary>
+        /// Button Event that ends a screen recording, saving the file and returning to the base screen. 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button2_Click(object sender, EventArgs e)
         {
-            x.EndRecording();
-            button1.Enabled = true;
-            button2.Enabled = false;
+            _timer.Stop();
+            var timeout = DateTime.Now;
+            _x.EndRecording();
+            Cursor.Current = Cursors.WaitCursor;
+            while (this.SavePath == null)
+            {
+                var duration = DateTime.Now - timeout;
+                if (duration > TimeSpan.FromSeconds(5))
+                {
+                    MessageBox.Show("Recording Timeout Failure");
+                    break;
+                }
+                Thread.Sleep(1000);
+            }
+
+            Cursor.Current = Cursors.Default;
+            this.Close();
         }
+        private void OnTimerElapsed(object o, ElapsedEventArgs s)
+        {
+            var duration = DateTime.Now - _sTime;
+            try
+            {
+                LBLTimer.Invoke((MethodInvoker)delegate { LBLTimer.Text = duration.ToString(@"hh\:mm\:ss"); });
+            }
+            catch (Exception ex)
+            {
+                return;
+                //here we catch thread termination
+            }
+
+        }
+
     }
 
     internal class RecordingHandler : IDisposable
@@ -87,7 +139,7 @@ namespace MoodMe_NETDemo
         {
             _name = DateTime.UtcNow.ToFileTime().ToString();
             //TODO make it use time for name instead of test
-            string videoPath = Path.Combine(p, _name + ".mp4");
+            var videoPath = Path.Combine(p, _name + ".mp4");
             var f = new FileInfo(videoPath);
             if (f.Exists)
             {
@@ -119,9 +171,9 @@ namespace MoodMe_NETDemo
         public void Rec_OnRecordingComplete(object sender, RecordingCompleteEventArgs e)
         {
             //Get the file path if recorded to a file
-            MessageBox.Show(e.FilePath);
+            //MessageBox.Show(e.FilePath);
             CompleteStatus.Invoke(this, e);
-            string path = e.FilePath;
+            var path = e.FilePath;
         }
 
         /// <summary>
@@ -129,7 +181,7 @@ namespace MoodMe_NETDemo
         /// </summary>
         private void Rec_OnRecordingFailed(object sender, RecordingFailedEventArgs e)
         {
-            string error = e.Error;
+            var error = e.Error;
             ErrorStatus.Invoke(this,e);
         }
 
@@ -138,7 +190,7 @@ namespace MoodMe_NETDemo
         /// </summary>
         private void Rec_OnStatusChanged(object sender, RecordingStatusEventArgs e)
         {
-            RecorderStatus status = e.Status;
+            var status = e.Status;
         }
     }
 }

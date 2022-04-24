@@ -15,3 +15,9 @@ C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\M
 C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\MoodMe NETDemo.exe
 C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\MoodMe NETDemo.pdb
 C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\MoodMe_NETDemo.RecordingScreen.resources
+C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\bin\x64\Debug\Interop.WMPLib.dll
+C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\bin\x64\Debug\AxInterop.WMPLib.dll
+C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\Interop.WMPLib.dll
+C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\AxInterop.WMPLib.dll
+C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\MoodMe NETDemo.csproj.ResolveComReference.cache
+C:\Users\harry\Documents\GitHub\WinformRecordDemo\MoodMe NETDemo\obj\x64\Debug\MoodMe_NETDemo.Form2.resources
