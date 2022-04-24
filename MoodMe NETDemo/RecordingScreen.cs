@@ -52,7 +52,7 @@ namespace MoodMe_NETDemo
         {
             SavePath = ((RecordingCompleteEventArgs) e).FilePath;
             if (SavePath.Length == 0)
-                throw new Exception("Error Recording Path Failed");
+                throw new Exception("Error recordings Path Failed");
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace MoodMe_NETDemo
                 var duration = DateTime.Now - timeout;
                 if (duration > TimeSpan.FromSeconds(5))
                 {
-                    MessageBox.Show(@"Recording Timeout Failure");
+                    MessageBox.Show(@"recordings Timeout Failure");
                     break;
                 }
                 Thread.Sleep(500);

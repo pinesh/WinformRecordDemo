@@ -18,7 +18,8 @@ namespace MoodMe_NETDemo
                 _m = new RecordingModel();
 
                 //Data Binding
-                DataGridViewRecordings.DataBindings.Add(new Binding("DataSource", _m, "Recordings"));
+                //DataGridViewRecordings.DataSource = _m.bindingSource1;
+                DataGridViewRecordings.DataBindings.Add(new Binding("DataSource", _m, "BindSource"));
                 DataGridViewRecordings.CellClick += (s, ef) => _m.GridClick(s, ef);
                 var removeButtonColumn = new DataGridViewButtonColumn();
                 {
@@ -28,6 +29,8 @@ namespace MoodMe_NETDemo
                     removeButtonColumn.UseColumnTextForButtonValue = true;
                     DataGridViewRecordings.Columns.Add(removeButtonColumn);
                 }
+               
+
                 DataGridViewRecordings.MultiSelect = false;
                 DataGridViewRecordings.Columns[0].Visible = false;
 
@@ -36,8 +39,9 @@ namespace MoodMe_NETDemo
                     DataGridViewRecordings.Columns[i].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Close();
             }
         }
@@ -81,6 +85,8 @@ namespace MoodMe_NETDemo
                 }
             }
         }
+
+       
     }
 
 }

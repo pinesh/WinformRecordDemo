@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditRecordingForm));
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.BTNCancel = new System.Windows.Forms.Button();
@@ -38,6 +39,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.TagTextBox = new System.Windows.Forms.TextBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.axWindowsMediaPlayer1)).BeginInit();
             this.SuspendLayout();
@@ -98,6 +100,8 @@
             this.LBLSelectedRecording.Size = new System.Drawing.Size(78, 13);
             this.LBLSelectedRecording.TabIndex = 22;
             this.LBLSelectedRecording.Text = "None Selected";
+            this.toolTip1.SetToolTip(this.LBLSelectedRecording, "Double click to copy");
+            this.LBLSelectedRecording.DoubleClick += new System.EventHandler(this.LBLSelectedRecording_DoubleClick);
             // 
             // BTNSubmitRecording
             // 
@@ -163,5 +167,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox TagTextBox;
         private System.Windows.Forms.Button BTNCancel;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

@@ -10,7 +10,7 @@ namespace MoodMe_NETDemo
         {
              _m = pass;
             InitializeComponent();
-            //Recording Label
+            //recordings Label
             LBLSelectedRecording.DataBindings.Add(new Binding("Text", pass, "CurrentRecording"));
 
             //Tag TextBox Binding
@@ -44,5 +44,10 @@ namespace MoodMe_NETDemo
             Close();
         }
 
+        private void LBLSelectedRecording_DoubleClick(object sender, System.EventArgs e)
+        {
+            toolTip1.Show("Copied!",LBLSelectedRecording,500);
+            toolTip1.SetToolTip(LBLSelectedRecording,"Double click to copy");
+        }
     }
 }

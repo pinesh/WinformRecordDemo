@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
+using System.Data.Entity.Migrations;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -8,67 +9,56 @@ using System.Windows.Forms;
 
 namespace MoodMe_NETDemo
 {
+   
     public class RecordingModel : INotifyPropertyChanged
     {
         public long? LocalId;
         private string _currentRecording = "";
         private string _tag = "";
         private string _initialTag;
-        private DataTable _recordings;
-        private readonly RecordingDbManager _recordingDb;
+
+        private BindingSource _bindingSource1 = new BindingSource();
 
         private bool _tagEnabled;
         private bool _submitState;
         private bool _tagEmpty;
         public string RecordingPath;
 
+        private readonly EntityDatabase.RecordingContext _db;
+
+        internal void RefreshTable()
+        {
+            var query = from b in _db.Recordings select b;
+            BindSource.DataSource = query.ToList();
+        }
+
         /// <summary>
         /// Constructor
         /// </summary>
-        public RecordingModel()
+        public RecordingModel(string name = "demo.db")
         {
+            RecordingPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath) ?? string.Empty, "Recordings");
+            var dbPath = Path.Combine(RecordingPath, name);
+            //Establish and validate the internal database. 
+            RecordingDbManager m = new RecordingDbManager(name);
 
-            _recordingDb = new RecordingDbManager("demo.db");
-            Recordings = _recordingDb.Ds.Tables[0];
-            RecordingPath = _recordingDb.RecordingFolder;
+            //Attach Entity Framework to database.
+            _db = new EntityDatabase.RecordingContext(dbPath);
+            RefreshTable();
         }
 
-        public DataTable Recordings
+        public BindingSource BindSource
         {
-            get => _recordings;
+            get => _bindingSource1;
             set
             {
-                _recordings = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Recordings"));
+                _bindingSource1 = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("BindSource"));
             }
         }
 
         /// <summary>
-        /// LINQ Expression to check if a new entry is distinct.
-        /// </summary>
-        /// <param name="includeTag"> Bool flag to check beyond Primary key</param>
-        /// <returns></returns>
-        public bool Found(bool includeTag)
-        {
-            if (!LocalId.HasValue) return false;
-
-            if (!includeTag)
-            {
-                var selectRows = Recordings.Rows.Cast<DataRow>()
-                    .Where(row => row.Field<long>("id") == LocalId.Value);
-                return selectRows.Any();
-            }
-            else
-            {
-                var selectRows = Recordings.Rows.Cast<DataRow>()
-                    .Where(row => row.Field<long>("id") == LocalId.Value && row.Field<string>("tag") == _tag);
-                return selectRows.Any();
-            }
-
-        }
-
-        /// <summary>
-        /// Current Recording File Label Property
+        /// Current recordings File Label Property
         /// </summary>
         public string CurrentRecording
         {
@@ -79,7 +69,7 @@ namespace MoodMe_NETDemo
                 if (PropertyChanged == null) return;
                 if (_currentRecording.Length > 0)
                     TagFieldEnabled = true;
-                PropertyChanged(this, new PropertyChangedEventArgs("CurrentRecording"));
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(CurrentRecording)));
             }
         }
 
@@ -150,6 +140,29 @@ namespace MoodMe_NETDemo
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+
+        /// <summary>
+        /// LINQ Expression to check if a new entry is distinct.
+        /// </summary>
+        /// <param name="includeTag"> Bool flag to check beyond Primary key</param>
+        /// <returns></returns>
+        public bool Found(bool includeTag)
+        {
+            if (!LocalId.HasValue) return false;
+            if (!includeTag)
+            {
+                var query = from b in _db.Recordings where b.id == LocalId.Value select b;
+                return query.Any();
+            }
+            else
+            {
+                var query = from b in _db.Recordings where b.id == LocalId.Value && b.tag == _tag select b;
+                return query.Any();
+            }
+
+        }
+
+        
         /// <summary>
         /// Remove an entry from the Database, deleting the local recording file
         /// </summary>
@@ -162,8 +175,9 @@ namespace MoodMe_NETDemo
                 var f = new FileInfo(filePath);
                 if(f.Exists)
                     f.Delete();
-                _recordingDb.Remove(id);
-                Recordings = _recordingDb.Ds.Tables[0];
+                _db.Recordings.Remove(_db.Recordings.First(c => c.id == id));
+                _db.SaveChanges();
+                this.RefreshTable();
             }
             catch (Exception e)
             {
@@ -177,27 +191,29 @@ namespace MoodMe_NETDemo
         /// <param name="e"> Cell info</param>
         public void GridClick(object sender ,DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex > Recordings.Rows.Count - 1 || e.RowIndex < 0) return;
+
+            if (e.RowIndex > ((List<EntityDatabase.recordings>)BindSource.DataSource).Count - 1 || e.RowIndex < 0) return;
 
             if (e.ColumnIndex == ((DataGridView)sender).Columns["del_col"].Index)
             {
-                var result = MessageBox.Show(@"Are you sure you want to delete?", @"Delete Recording", MessageBoxButtons.YesNo);
+                var result = MessageBox.Show(@"Are you sure you want to delete?", @"Delete recordings", MessageBoxButtons.YesNo);
                 if (result != DialogResult.Yes) return;
-                DeleteEntry((long)Recordings.Rows[e.RowIndex].ItemArray[0], (string)Recordings.Rows[e.RowIndex].ItemArray[1]);
+                var b =BindSource.DataSource.ToString();
+                DeleteEntry(((List<EntityDatabase.recordings>)BindSource.DataSource)[e.RowIndex].id, ((List<EntityDatabase.recordings>)BindSource.DataSource)[e.RowIndex].video);
                 return;
             }
 
             if (!Found(true) && _currentRecording != "")
             {
-                var result = MessageBox.Show(@"You have an unsaved changes, do you want to discard?", @"Discard Previous Recording", MessageBoxButtons.YesNo);
+                var result = MessageBox.Show(@"You have an unsaved changes, do you want to discard?", @"Discard Previous recordings", MessageBoxButtons.YesNo);
                 if (result != DialogResult.Yes) return;
             }
 
-            var r = Recordings.Rows[e.RowIndex];
-            _initialTag = (string)r.ItemArray[2];
-            LocalId = (long)r.ItemArray[0];
-            CurrentRecording = Path.Combine(RecordingPath,(string)r.ItemArray[1]);
-            TagText = (string)r.ItemArray[2];
+            var r = ((List<EntityDatabase.recordings>)BindSource.DataSource)[e.RowIndex];
+            _initialTag = r.tag;
+            LocalId = r.id;
+            CurrentRecording = Path.Combine(RecordingPath,(string)r.video);
+            TagText = (string)r.tag;
         }
 
         /// <summary>
@@ -220,6 +236,14 @@ namespace MoodMe_NETDemo
             const MessageBoxButtons buttons = MessageBoxButtons.OK;
             const MessageBoxIcon icon = MessageBoxIcon.Error;
             MessageBox.Show(message, title, buttons, icon);
+        }
+
+        protected internal void CleanProps()
+        {
+            LocalId = null;
+            _initialTag = "";
+            TagText = "";
+            CurrentRecording = "";
         }
 
         public delegate void Close();
@@ -251,15 +275,11 @@ namespace MoodMe_NETDemo
 
             var result = MessageBox.Show(@"Are you sure you want to upload?", @"Confirm Submit", MessageBoxButtons.YesNo);
             if (result != DialogResult.Yes) return;
-
-            _recordingDb.Transact(Path.GetFileName(CurrentRecording), TagText, LocalId.Value);
-            //PropertyChanged(this, new PropertyChangedEventArgs("RecordingDB"));
-             Recordings = _recordingDb.Ds.Tables[0];
+            _db.Recordings.AddOrUpdate(new EntityDatabase.recordings(){id=LocalId.Value,tag = TagText,video = Path.GetFileName(CurrentRecording)});
+            _db.SaveChanges();
+            this.RefreshTable();
             //Reset Locals
-            LocalId = null;
-            _initialTag = "";
-            TagText = "";
-            CurrentRecording = "";
+            this.CleanProps();
             c();
         }
 
@@ -270,7 +290,7 @@ namespace MoodMe_NETDemo
         public void ClearCancel(FormClosingEventArgs e)
         {
             if (Found(true) || _currentRecording == "") return;
-            var result = MessageBox.Show(@"You have an unsaved changes, do you want to discard?", @"Discard Previous Recording", MessageBoxButtons.YesNo);
+            var result = MessageBox.Show(@"You have an unsaved changes, do you want to discard?", @"Discard Previous recordings", MessageBoxButtons.YesNo);
             if (result == DialogResult.No)
             {
                 e.Cancel = true;
@@ -280,10 +300,7 @@ namespace MoodMe_NETDemo
             var f = new FileInfo(CurrentRecording);
             if (f.Exists) 
                 f.Delete();
-            LocalId = null;
-            _initialTag = "";
-            TagText = "";
-            CurrentRecording = "";
+            this.CleanProps();
             Cursor.Current = Cursors.Default;
         }
     }

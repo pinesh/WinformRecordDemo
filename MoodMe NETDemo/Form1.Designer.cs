@@ -32,10 +32,12 @@ namespace MoodMe_NETDemo
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.label1 = new System.Windows.Forms.Label();
             this.DataGridViewRecordings = new System.Windows.Forms.DataGridView();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.BTNNewRecording = new System.Windows.Forms.Button();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.DataGridViewRecordings)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -62,7 +64,8 @@ namespace MoodMe_NETDemo
             this.DataGridViewRecordings.RowTemplate.Height = 33;
             this.DataGridViewRecordings.Size = new System.Drawing.Size(454, 292);
             this.DataGridViewRecordings.TabIndex = 3;
-            this.DataGridViewRecordings.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
+            this.toolTip1.SetToolTip(this.DataGridViewRecordings, "Click to edit");
+            this.DataGridViewRecordings.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
             // 
             // groupBox1
             // 
@@ -75,7 +78,7 @@ namespace MoodMe_NETDemo
             this.groupBox1.Size = new System.Drawing.Size(462, 379);
             this.groupBox1.TabIndex = 10;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Recording Manager";
+            this.groupBox1.Text = "Recordings Manager - Double click cell to edit";
             // 
             // BTNNewRecording
             // 
@@ -111,6 +114,7 @@ namespace MoodMe_NETDemo
         private System.Windows.Forms.DataGridView DataGridViewRecordings;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button BTNNewRecording;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }
 
