@@ -199,7 +199,7 @@ namespace MoodMe_NETDemo
                 var result = MessageBox.Show(@"Are you sure you want to delete?", @"Delete recordings", MessageBoxButtons.YesNo);
                 if (result != DialogResult.Yes) return;
                 var b =BindSource.DataSource.ToString();
-                DeleteEntry(((List<EntityDatabase.recordings>)BindSource.DataSource)[e.RowIndex].id, ((List<EntityDatabase.recordings>)BindSource.DataSource)[e.RowIndex].video);
+                DeleteEntry(((List<EntityDatabase.recordings>)BindSource.DataSource)[e.RowIndex].id, Path.Combine(RecordingPath, ((List<EntityDatabase.recordings>)BindSource.DataSource)[e.RowIndex].video));
                 return;
             }
 
