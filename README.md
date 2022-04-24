@@ -6,7 +6,7 @@ Represents all requested features with a minor change to the actual recording wi
 
 _Download the release, extract and run the executable, no other deployment needed._
 
-**Questionare**
+**Questionnaire**
 
 _Please rate your proficiency in the following on a scale of 1-10:_
 
