@@ -6,13 +6,20 @@ using System.Windows.Forms;
 
 namespace MoodMe_NETDemo
 {
-    public class RecordingDbManager
+    internal class RecordingDbManager
         {
             private string _connectionString;
             private readonly string _dbname;
 
-            private readonly string _createState =
-                "CREATE TABLE recordings(id INTEGER PRIMARY KEY,video TEXT NOT NULL UNIQUE, tag TEXT NOT NULL)";
+            //SQL Statements Used
+            private const string CreateState =
+                @"CREATE TABLE recordings(id INTEGER PRIMARY KEY,video TEXT NOT NULL UNIQUE, tag TEXT NOT NULL)";
+            private const string SelectAll = @"SELECT * FROM recordings"; 
+            private const string InsertOrUpdate =
+                @"INSERT INTO recordings(id,video,tag) VALUES($id,$video,$tag)  ON CONFLICT(id) DO UPDATE SET tag=excluded.tag;";
+            private const string GetSchema = @"SELECT sql FROM sqlite_master WHERE tbl_name = 'recordings';";
+            private const string DeleteById = @"DELETE FROM recordings WHERE id = @id";
+
             public string RecordingFolder;
             public DataSet Ds;
 
@@ -20,21 +27,33 @@ namespace MoodMe_NETDemo
             {
                 _dbname = name;
                 EstablishDb();
-                PopulateDb();
+                PopulateRecordingsDb();
             }
 
-            internal void PopulateDb()
+            /// <summary>
+            /// Pulls the contents of the database to the local object. 
+            /// </summary>
+            internal void PopulateRecordingsDb()
             {
                 using (var conn = new SQLiteConnection(_connectionString))
                 {
-                    var dap = new SQLiteDataAdapter("SELECT * FROM recordings", _connectionString);
+                    var dap = new SQLiteDataAdapter(SelectAll, _connectionString);
                     Ds = new DataSet();
+                    var creationCol = new DataColumn("creation_date", typeof(string));
+                    creationCol.AllowDBNull = true;
                     dap.Fill(Ds);
+                    Ds.Tables[0].Columns.Add(creationCol);
+                    foreach (DataRow row in Ds.Tables[0].Rows)
+                        row["creation_date"] = DateTime.FromFileTimeUtc((long)row[0]).ToLocalTime().ToString();
+                    creationCol.AllowDBNull = false;
                     conn.Close();
                 }
             }
 
-            //Remove entry from database by ID
+            /// <summary>
+            ///     Remove a DB entry by ID
+            /// </summary>
+            /// <param name="id">Long Primary Key</param>
             public void Remove(long id)
             {
                 try
@@ -47,14 +66,15 @@ namespace MoodMe_NETDemo
                             using (var comm = new SQLiteCommand())
                             {
                                 comm.Connection = conn;
-                                comm.CommandText =
-                                    "DELETE FROM recordings WHERE id = @id";
+                                comm.CommandText = DeleteById;
                                 comm.Parameters.AddWithValue("@id", id);
-                            comm.Prepare();
+                                comm.Prepare();
                                 comm.ExecuteNonQuery();
                             }
+
                             tran.Commit();
                         }
+
                         conn.Close();
                     }
                 }
@@ -62,10 +82,16 @@ namespace MoodMe_NETDemo
                 {
                     MessageBox.Show(ex.Message);
                 }
-                PopulateDb();
-            }
-            
 
+                PopulateRecordingsDb();
+            }
+
+            /// <summary>
+            ///     Inserts an element into the database.
+            /// </summary>
+            /// <param name="video"> The filename</param>
+            /// <param name="tag">The required tag</param>
+            /// <param name="id">The creation time (doubles as primary key)</param>
             internal void Transact(string video, string tag, long id)
             {
                 try
@@ -78,8 +104,7 @@ namespace MoodMe_NETDemo
                             using (var comm = new SQLiteCommand())
                             {
                                 comm.Connection = conn;
-                                comm.CommandText =
-                                    "INSERT INTO recordings(id,video,tag) VALUES($id,$video,$tag)  ON CONFLICT(id) DO UPDATE SET tag=excluded.tag;";
+                                comm.CommandText = InsertOrUpdate;
                                 comm.Parameters.AddWithValue("$id", id);
                                 comm.Parameters.AddWithValue("$video", video);
                                 comm.Parameters.AddWithValue("$tag", tag);
@@ -97,42 +122,39 @@ namespace MoodMe_NETDemo
                 {
                     MessageBox.Show(ex.Message);
                 }
-                PopulateDb();
+
+                PopulateRecordingsDb();
             }
 
             /// <summary>
-            /// Asserts the database file found matches the expected schema. 
+            ///     Asserts the database file found matches the expected schema.
             /// </summary>
-            internal void VerifyDB()
+            internal void VerifyDb()
             {
                 try
                 {
                     using (var conn = new SQLiteConnection(_connectionString))
                     {
-                        var dap = new SQLiteDataAdapter("SELECT sql FROM sqlite_master WHERE tbl_name = 'recordings';", _connectionString);
-                         var ds = new DataSet();    
-                         dap.Fill(ds);
-                         if ((string)ds.Tables[0].Rows[0][0] !=
-                             _createState)
-                         {
-                             throw new Exception(
-                                 "Error, database schema cannot be read or does not match expected schema");
-                         }
-                        
+                        var dap = new SQLiteDataAdapter(GetSchema, _connectionString);
+                        var ds = new DataSet();
+                        dap.Fill(ds);
+                        if ((string)ds.Tables[0].Rows[0][0] != CreateState)
+                            throw new Exception(
+                                "Error, database schema cannot be read or does not match expected schema");
+
                         conn.Close();
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, "Error",MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     throw new Exception();
                 }
             }
 
 
-
             /// <summary>
-            /// Looks for the application database, if not present, creates it. 
+            ///     Looks for the application database, if not present, creates it.
             /// </summary>
             internal void EstablishDb()
             {
@@ -140,19 +162,17 @@ namespace MoodMe_NETDemo
                 RecordingFolder = dir;
                 try
                 {
-                    if (!Directory.Exists(dir))
-                    {
-                        Directory.CreateDirectory(dir);
-                    }
+                    if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
                     var dbPath = Path.Combine(dir, _dbname);
                     _connectionString = "Data Source=" + dbPath;
-                if (File.Exists(dbPath))
-                { VerifyDB();
-                    return;
-                }
+                    if (File.Exists(dbPath))
+                    {
+                        VerifyDb();
+                        return;
+                    }
 
-                SQLiteConnection.CreateFile(dbPath);
+                    SQLiteConnection.CreateFile(dbPath);
 
                     using (var conn = new SQLiteConnection(_connectionString))
                     {
@@ -160,13 +180,12 @@ namespace MoodMe_NETDemo
                         using (var comm = new SQLiteCommand())
                         {
                             comm.Connection = conn;
-                            comm.CommandText = _createState;
+                            comm.CommandText = CreateState;
                             comm.ExecuteNonQuery();
                         }
 
                         conn.Close();
                     }
-
                 }
                 catch (Exception ex)
                 {

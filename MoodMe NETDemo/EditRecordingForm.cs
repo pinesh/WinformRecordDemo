@@ -2,10 +2,11 @@
 
 namespace MoodMe_NETDemo
 {
-    public partial class Form2 : Form
+    public partial class EditRecordingForm : Form
     {
         private readonly RecordingModel _m;
-        public Form2(ref RecordingModel pass)
+
+        private EditRecordingForm(ref RecordingModel pass)
         {
              _m = pass;
             InitializeComponent();
@@ -29,6 +30,15 @@ namespace MoodMe_NETDemo
             TagTextBox.TextChanged += (s, e) => _m.TagTextChanged(s, e);
             FormClosing += (s, e) => _m.ClearCancel(e);
         }
+
+        public static EditRecordingForm CreateInstance(ref RecordingModel pass)
+        {
+            return new EditRecordingForm(ref pass);
+        }
+
+        /// <summary>
+        /// Closing Delegate for passing to model
+        /// </summary>
         private new void Closing()
         {
             Close();

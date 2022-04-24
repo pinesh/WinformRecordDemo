@@ -33,8 +33,6 @@ namespace MoodMe_NETDemo
             RecordingPath = _recordingDb.RecordingFolder;
         }
 
-    
-
         public DataTable Recordings
         {
             get => _recordings;
@@ -78,12 +76,10 @@ namespace MoodMe_NETDemo
             set
             {
                 _currentRecording = value;
-                if (PropertyChanged != null)
-                {
-                    if (_currentRecording.Length > 0)
-                        TagFieldEnabled = true;
-                    PropertyChanged(this, new PropertyChangedEventArgs("CurrentRecording"));
-                }
+                if (PropertyChanged == null) return;
+                if (_currentRecording.Length > 0)
+                    TagFieldEnabled = true;
+                PropertyChanged(this, new PropertyChangedEventArgs("CurrentRecording"));
             }
         }
 
@@ -96,7 +92,7 @@ namespace MoodMe_NETDemo
             set
             {
                 _submitState = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("SubmitState"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SubmitState)));
             }
         }
 
@@ -109,7 +105,7 @@ namespace MoodMe_NETDemo
             set
             {
                 _tagEnabled = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("TagFieldEnabled"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TagFieldEnabled)));
             }
         }
 
@@ -124,7 +120,7 @@ namespace MoodMe_NETDemo
                 _tagEmpty = value;
                 if (_tagEmpty)
                     SubmitState = false;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("TagFieldEmpty"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TagFieldEmpty)));
             }
         }
 
@@ -136,14 +132,11 @@ namespace MoodMe_NETDemo
             get => _tag;
             set
             {
-                _tag = value.Trim();
-                if (PropertyChanged != null)
-                {
-                    SubmitState = _tag != _initialTag;
-                    TagFieldEmpty = !(_tag.Length > 0);
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TagText)));
-                    //PropertyChanged(this, new PropertyChangedEventArgs("TagText"));
-                }
+                _tag = value;
+                if (PropertyChanged == null) return;
+                SubmitState = _tag != _initialTag;
+                TagFieldEmpty = !(_tag.Length > 0);
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TagText)));
             }
         }
 
@@ -157,12 +150,16 @@ namespace MoodMe_NETDemo
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-
+        /// <summary>
+        /// Remove an entry from the Database, deleting the local recording file
+        /// </summary>
+        /// <param name="id"> The primary key time ID</param>
+        /// <param name="filePath">The path of the file</param>
         public void DeleteEntry(long id, string filePath)
         {
             try
             {
-                FileInfo f = new FileInfo(filePath);
+                var f = new FileInfo(filePath);
                 if(f.Exists)
                     f.Delete();
                 _recordingDb.Remove(id);
@@ -181,8 +178,8 @@ namespace MoodMe_NETDemo
         public void GridClick(object sender ,DataGridViewCellEventArgs e)
         {
             if (e.RowIndex > Recordings.Rows.Count - 1 || e.RowIndex < 0) return;
-            var temp = (DataGridView)sender;
-            if (e.ColumnIndex == temp.Columns["del_col"].Index)
+
+            if (e.ColumnIndex == ((DataGridView)sender).Columns["del_col"].Index)
             {
                 var result = MessageBox.Show(@"Are you sure you want to delete?", @"Delete Recording", MessageBoxButtons.YesNo);
                 if (result != DialogResult.Yes) return;
@@ -226,12 +223,13 @@ namespace MoodMe_NETDemo
         }
 
         public delegate void Close();
+
         /// <summary>
         /// Submit a new entry to the db. 
         /// </summary>
         public void Submit(Close c)
         {
-            //verify integrity of currentfile, must exist. 
+            //verify integrity of current file, must exist. 
             var f = new FileInfo(CurrentRecording);
             if (!f.Exists)
             {
@@ -265,6 +263,10 @@ namespace MoodMe_NETDemo
             c();
         }
 
+        /// <summary>
+        /// Facilitates Cancel  Button and form closing.
+        /// </summary>
+        /// <param name="e"></param>
         public void ClearCancel(FormClosingEventArgs e)
         {
             if (Found(true) || _currentRecording == "") return;

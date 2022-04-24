@@ -1,6 +1,6 @@
 ﻿namespace MoodMe_NETDemo
 {
-    partial class Form2
+    partial class EditRecordingForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form2));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditRecordingForm));
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.BTNCancel = new System.Windows.Forms.Button();
             this.axWindowsMediaPlayer1 = new AxWMPLib.AxWindowsMediaPlayer();
@@ -137,14 +137,14 @@
             this.TagTextBox.Size = new System.Drawing.Size(125, 20);
             this.TagTextBox.TabIndex = 18;
             // 
-            // Form2
+            // EditRecordingForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(366, 450);
             this.Controls.Add(this.groupBox1);
-            this.Name = "Form2";
-            this.Text = "Form2";
+            this.Name = "EditRecordingForm";
+            this.Text = "EditRecordingForm";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.axWindowsMediaPlayer1)).EndInit();

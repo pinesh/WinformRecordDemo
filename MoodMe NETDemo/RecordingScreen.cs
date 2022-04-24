@@ -16,10 +16,7 @@ namespace MoodMe_NETDemo
         public string SavePath { get; private set; }
         public long StartTime { get; private set; }
 
-        private static readonly IntPtr HwndTopmost = new IntPtr(-1);
-        private const UInt32 SwpNosize = 0x0001;
-        private const UInt32 SwpNomove = 0x0002;
-        private const UInt32 TopmostFlags = SwpNomove | SwpNosize;
+ 
         private DateTime _sTime;
 
         private readonly Timer _timer = new Timer(1000);
@@ -32,13 +29,15 @@ namespace MoodMe_NETDemo
             LBLTimer.Text = "00:00:00";
         }
 
+        //Sets recording panel to always be in front of applications
+        private static readonly IntPtr HwndTopmost = new IntPtr(-1);
+        private const UInt32 TopmostFlags = 0x0002 | 0x0001;
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
         private void RecordingScreen_Load(object sender, EventArgs e)
         {
             SetWindowPos(Handle, HwndTopmost, 0, 0, 0, 0, TopmostFlags);
-    
         }
 
         private void OnRecordingError(object sender, EventArgs e)
@@ -94,6 +93,11 @@ namespace MoodMe_NETDemo
             }
         }
 
+        /// <summary>
+        /// Start button event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button1_Click(object sender, EventArgs e)
         {
             StartTime = DateTime.UtcNow.ToFileTime();
